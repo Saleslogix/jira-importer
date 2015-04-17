@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Jira\Fields\MultiSelect.cs" />
     <Compile Include="Jira\IssueRequest.cs" />
     <Compile Include="Jira\IssueResponse.cs" />
     <Compile Include="Jira\IssueType.cs" />

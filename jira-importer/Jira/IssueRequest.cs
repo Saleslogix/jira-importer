@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+using Importer.Jira.Fields;
+using Newtonsoft.Json;
 
 namespace Importer.Jira
 {
@@ -14,15 +16,22 @@ namespace Importer.Jira
 		[JsonProperty("description")]
 		public string Description { get; set; }
 
+        [JsonProperty("priority")]
+        public string Priority { get; set; }
+
 		[JsonProperty("issuetype")]
 		public IssueType JiraIssueType { get; set; }
 
 		[JsonProperty("customfield_12000")]
 		public string DefectId { get; set; }
 
+        [JsonProperty("versions")]
+        public List<MultiSelect> Versions { get; set; } 
+
 		public IssueRequest()
 		{
 			JiraProjectRequest = new ProjectRequest();
+            Versions = new List<MultiSelect>();
 		}
 	}
 

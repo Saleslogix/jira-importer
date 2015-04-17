@@ -1,7 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+using Importer.Jira.Fields;
+using Newtonsoft.Json;
 using System;
 using System.Xml;
 using System.Xml.Serialization;
+using System.IO;
+using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Importer
 {
@@ -13,19 +17,110 @@ namespace Importer
 			
 			var s = new XmlSerializer(typeof(YouTrack.Issues));
 			var issues = (YouTrack.Issues)s.Deserialize(reader);
+		    var youTrackToJiraTypeMapping = new Dictionary<string, Jira.IssueType>
+		    {
+		        {
+		            "Bug", Jira.IssueType.Bug
+		        },
+		        {
+		            "Cosmetics", Jira.IssueType.Task
+		        },
+		        {
+		            "Feature", Jira.IssueType.NewFeature
+		        },
+		        {
+		            "Task", Jira.IssueType.Task
+		        },
+		        {
+		            "Usability Problem", Jira.IssueType.Task
+		        }
+		    };
 
-			var jiraIssue = new Jira.IssueRequest
-			{
-			    JiraProjectRequest = {Key = "INFORCRM"},
-			    Description = "foo",
-			    Summary = "bar",
-			    DefectId = "MBL-108049",
-			    JiraIssueType = Jira.IssueType.Bug
-			};
+		    var youTrackToJiraPriorityMapping = new Dictionary<string, string>
+		    {
+		        {
+		            "Show-stopper", "Blocker"
+		        },
+		        {
+		            "Critical", "Critical"
+		        },
+		        {
+		            "Major", "Major"
+		        },
+		        {
+		            "Normal", "Minor"
+		        },
+		        {
+		            "Minor", "Trivial"
+		        }
+		    };
 
-		    string json = JsonConvert.SerializeObject(jiraIssue, Newtonsoft.Json.Formatting.Indented);
+            var mapping = new Dictionary<string, Action<YouTrack.Field, Jira.IssueRequest>>
+            {
+                {
+                    "numberInProject", delegate(YouTrack.Field field, Jira.IssueRequest request)
+                    {
+                        request.DefectId = "MBL-" + field.Value;
+                    }
+                },
+                {
+                    "description", delegate(YouTrack.Field field, Jira.IssueRequest request)
+                    {
+                        request.Description = field.Value;
+                    }
+                },
+                {
+                    "summary", delegate(YouTrack.Field field, Jira.IssueRequest request)
+                    {
+                        request.Summary = field.Value;
+                    }
+                },
+                {
+                    "Type", delegate(YouTrack.Field field, Jira.IssueRequest request)
+                    {
+                        request.JiraIssueType = youTrackToJiraTypeMapping[field.Value];
+                    }
+                },
+                {
+                    "Priority", delegate(YouTrack.Field field, Jira.IssueRequest request)
+                    {
+                        request.Priority = youTrackToJiraPriorityMapping[field.Value];
+                    }
+                }
+            };
 
-			Console.WriteLine(json);
+            foreach (var issue in issues.Issue)
+            {
+                var jiraIssue = new Jira.IssueRequest
+                {
+                    JiraProjectRequest = { Key = "INFORCRM" },
+                    JiraIssueType = Jira.IssueType.Bug,
+                    Description = string.Empty,
+                    Summary = string.Empty
+                };
+
+                jiraIssue.Versions.Add(new MultiSelect{ Value = "Mobile 3.3"});
+
+                foreach (var field in issue.Fields)
+                {
+                    Action<YouTrack.Field, Jira.IssueRequest> action;
+                    if (mapping.TryGetValue(field.Name, out action))
+                    {
+                        action(field, jiraIssue);
+                    }
+                }
+
+                var json = JsonConvert.SerializeObject(jiraIssue, Formatting.Indented);
+                Console.WriteLine(json);
+
+                using (var file = File.CreateText(jiraIssue.DefectId + ".json"))
+                {
+                    var serializer = new JsonSerializer {Formatting = Formatting.Indented};
+                    serializer.Serialize(file, jiraIssue);
+                }
+            }
+
+	
 
 			Console.WriteLine();
 			Console.ReadLine();
