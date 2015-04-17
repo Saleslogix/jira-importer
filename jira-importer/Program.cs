@@ -13,7 +13,7 @@ namespace Importer
 	{
 		static void Main(string[] args)
 		{
-			var reader = XmlReader.Create("MBL.xml");
+			var reader = XmlReader.Create("MBL.xml"); // TODO: Don't hardcode
 			
 			var s = new XmlSerializer(typeof(YouTrack.Issues));
 			var issues = (YouTrack.Issues)s.Deserialize(reader);
@@ -93,13 +93,13 @@ namespace Importer
             {
                 var jiraIssue = new Jira.IssueRequest
                 {
-                    JiraProjectRequest = { Key = "INFORCRM" },
+                    JiraProjectRequest = { Key = "INFORCRM" }, // TODO: Don't hardcode
                     JiraIssueType = Jira.IssueType.Bug,
                     Description = string.Empty,
                     Summary = string.Empty
                 };
 
-                jiraIssue.Versions.Add(new MultiSelect{ Value = "Mobile 3.3"});
+                jiraIssue.Versions.Add(new MultiSelect{ Value = "Mobile 3.3"}); // TODO: Don't hardcode
 
                 foreach (var field in issue.Fields)
                 {
