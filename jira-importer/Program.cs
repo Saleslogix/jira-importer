@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
+using System;
 using System.Xml;
 using System.Xml.Serialization;
-using Newtonsoft.Json;
 
-namespace jira_importer
+namespace Importer
 {
 	class Program
 	{
@@ -15,17 +11,19 @@ namespace jira_importer
 		{
 			var reader = XmlReader.Create("MBL.xml");
 			
-			var s = new XmlSerializer(typeof(YouTrackIssues));
-			YouTrackIssues issues = (YouTrackIssues)s.Deserialize(reader);
+			var s = new XmlSerializer(typeof(YouTrack.Issues));
+			var issues = (YouTrack.Issues)s.Deserialize(reader);
 
-			var jiraIssue = new JiraIssue();
-			jiraIssue.JiraProject.Key = "INFORCRM";
-			jiraIssue.Description = "foo";
-			jiraIssue.Summary = "bar";
-			jiraIssue.DefectId = "MBL-108049";
-			jiraIssue.JiraIssueType = JiraIssueType.Bug;
+			var jiraIssue = new Jira.IssueRequest
+			{
+			    JiraProjectRequest = {Key = "INFORCRM"},
+			    Description = "foo",
+			    Summary = "bar",
+			    DefectId = "MBL-108049",
+			    JiraIssueType = Jira.IssueType.Bug
+			};
 
-			string json = JsonConvert.SerializeObject(jiraIssue, Newtonsoft.Json.Formatting.Indented);
+		    string json = JsonConvert.SerializeObject(jiraIssue, Newtonsoft.Json.Formatting.Indented);
 
 			Console.WriteLine(json);
 

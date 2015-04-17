@@ -7,7 +7,7 @@
     <ProjectGuid>{F4B23EAA-DE5F-4EDB-A87E-D539352B19FB}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>jira_importer</RootNamespace>
+    <RootNamespace>Importer</RootNamespace>
     <AssemblyName>jira-importer</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -45,8 +45,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="JiraIssue.cs" />
-    <Compile Include="YouTrackIssues.cs" />
+    <Compile Include="Jira\IssueRequest.cs" />
+    <Compile Include="Jira\IssueResponse.cs" />
+    <Compile Include="Jira\IssueType.cs" />
+    <Compile Include="Jira\ProjectRequest.cs" />
+    <Compile Include="YouTrack\Comment.cs" />
+    <Compile Include="YouTrack\Field.cs" />
+    <Compile Include="YouTrack\Issue.cs" />
+    <Compile Include="YouTrack\Issues.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -55,9 +61,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="MBL.xml">
+    <None Include="MBL.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
