@@ -9,51 +9,51 @@ using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Importer
 {
-	class Program
-	{
-		static void Main(string[] args)
-		{
-			var reader = XmlReader.Create("MBL.xml"); // TODO: Don't hardcode
-			
-			var s = new XmlSerializer(typeof(YouTrack.Issues));
-			var issues = (YouTrack.Issues)s.Deserialize(reader);
-		    var youTrackToJiraTypeMapping = new Dictionary<string, Jira.IssueType>
-		    {
-		        {
-		            "Bug", Jira.IssueType.Bug
-		        },
-		        {
-		            "Cosmetics", Jira.IssueType.Task
-		        },
-		        {
-		            "Feature", Jira.IssueType.NewFeature
-		        },
-		        {
-		            "Task", Jira.IssueType.Task
-		        },
-		        {
-		            "Usability Problem", Jira.IssueType.Task
-		        }
-		    };
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            var reader = XmlReader.Create("MBL.xml"); // TODO: Don't hardcode
 
-		    var youTrackToJiraPriorityMapping = new Dictionary<string, string>
-		    {
-		        {
-		            "Show-stopper", "Blocker"
-		        },
-		        {
-		            "Critical", "Critical"
-		        },
-		        {
-		            "Major", "Major"
-		        },
-		        {
-		            "Normal", "Minor"
-		        },
-		        {
-		            "Minor", "Trivial"
-		        }
-		    };
+            var s = new XmlSerializer(typeof(YouTrack.Issues));
+            var issues = (YouTrack.Issues)s.Deserialize(reader);
+            var youTrackToJiraTypeMapping = new Dictionary<string, Jira.IssueType>
+            {
+                {
+                    "Bug", Jira.IssueType.Bug
+                },
+                {
+                    "Cosmetics", Jira.IssueType.Task
+                },
+                {
+                    "Feature", Jira.IssueType.NewFeature
+                },
+                {
+                    "Task", Jira.IssueType.Task
+                },
+                {
+                    "Usability Problem", Jira.IssueType.Task
+                }
+            };
+
+            var youTrackToJiraPriorityMapping = new Dictionary<string, string>
+            {
+                {
+                    "Show-stopper", "Blocker"
+                },
+                {
+                    "Critical", "Critical"
+                },
+                {
+                    "Major", "Major"
+                },
+                {
+                    "Normal", "Minor"
+                },
+                {
+                    "Minor", "Trivial"
+                }
+            };
 
             var mapping = new Dictionary<string, Action<YouTrack.Field, Jira.IssueRequest>>
             {
@@ -99,7 +99,7 @@ namespace Importer
                     Summary = string.Empty
                 };
 
-                jiraIssue.Versions.Add(new MultiSelect{ Value = "Mobile 3.3"}); // TODO: Don't hardcode
+                jiraIssue.Versions.Add(new MultiSelect { Value = "Mobile 3.3" }); // TODO: Don't hardcode
 
                 foreach (var field in issue.Fields)
                 {
@@ -115,15 +115,15 @@ namespace Importer
 
                 using (var file = File.CreateText(jiraIssue.DefectId + ".json"))
                 {
-                    var serializer = new JsonSerializer {Formatting = Formatting.Indented};
+                    var serializer = new JsonSerializer { Formatting = Formatting.Indented };
                     serializer.Serialize(file, jiraIssue);
                 }
             }
 
-	
 
-			Console.WriteLine();
-			Console.ReadLine();
-		}
-	}
+
+            Console.WriteLine();
+            Console.ReadLine();
+        }
+    }
 }

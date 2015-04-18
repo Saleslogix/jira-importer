@@ -26,8 +26,6 @@ namespace Importer.Jira
         public static IssueType Documentation { get { return new IssueType("Documentation", "35"); } }
         public static IssueType Question { get { return new IssueType("Question", "38"); } }
         public static IssueType Epic { get { return new IssueType("Epic", "40"); } }
-        
-        
 
         [JsonProperty("name")]
         public string Name { get; set; }
