@@ -17,7 +17,7 @@ namespace Importer
 
             var s = new XmlSerializer(typeof(YouTrack.Issues));
             var issues = (YouTrack.Issues)s.Deserialize(reader);
-            var youTrackToJiraTypeMapping = new Dictionary<string, Jira.IssueType>
+            var youTrackToJiraTypeMapping = new Dictionary<string, Jira.IssueType> // TODO: Move
             {
                 {
                     "Bug", Jira.IssueType.Bug
@@ -36,7 +36,7 @@ namespace Importer
                 }
             };
 
-            var youTrackToJiraPriorityMapping = new Dictionary<string, string>
+            var youTrackToJiraPriorityMapping = new Dictionary<string, string> // TODO: Move
             {
                 {
                     "Show-stopper", "Blocker"
@@ -55,7 +55,7 @@ namespace Importer
                 }
             };
 
-            var mapping = new Dictionary<string, Action<YouTrack.Field, Jira.IssueRequest>>
+            var mapping = new Dictionary<string, Action<YouTrack.Field, Jira.IssueRequest>> // TODO: Move
             {
                 {
                     "numberInProject", delegate(YouTrack.Field field, Jira.IssueRequest request)
@@ -110,8 +110,8 @@ namespace Importer
                     }
                 }
 
-                var json = JsonConvert.SerializeObject(jiraIssue, Formatting.Indented);
-                Console.WriteLine(json);
+                //var json = JsonConvert.SerializeObject(jiraIssue, Formatting.Indented);
+                //Console.WriteLine(json);
 
                 using (var file = File.CreateText(jiraIssue.DefectId + ".json"))
                 {
@@ -119,8 +119,6 @@ namespace Importer
                     serializer.Serialize(file, jiraIssue);
                 }
             }
-
-
 
             Console.WriteLine();
             Console.ReadLine();
