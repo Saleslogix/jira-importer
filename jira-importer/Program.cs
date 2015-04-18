@@ -4,17 +4,22 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
+using System.Text;
 using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Importer
 {
     class Program
     {
+        static string jiraUserName;
+        static string jiraPassword;
+
         static void Main(string[] args)
         {
             var xmlDir = ConfigurationManager.AppSettings["YouTrackXMLDir"];
@@ -24,6 +29,20 @@ namespace Importer
             {
                 xmlDirInfo.Create();
                 Console.WriteLine("Missing XML files in " + xmlDir);
+                Console.ReadLine();
+                return;
+            }
+
+            // Auth
+            Console.WriteLine("Jira Username: ");
+            jiraUserName = Console.ReadLine();
+
+            Console.WriteLine("Jira Password: ");
+            jiraPassword = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(jiraUserName) || string.IsNullOrWhiteSpace(jiraPassword))
+            {
+                Console.WriteLine("You must enter a Jira username and password.");
                 Console.ReadLine();
                 return;
             }
@@ -64,7 +83,7 @@ namespace Importer
 
                     var jsonOutDir = Path.Combine(file.DirectoryName, projectId);
                     Directory.CreateDirectory(jsonOutDir);
-                    using (var json = File.CreateText(Path.Combine(jsonOutDir, jiraIssue.DefectId + ".json")))
+                    using (var json = File.CreateText(Path.Combine(jsonOutDir, string.Format("{0}.json", jiraIssue.DefectId))))
                     {
                         var serializer = new JsonSerializer { Formatting = Formatting.Indented };
                         serializer.Serialize(json, jiraIssue);
@@ -85,13 +104,9 @@ namespace Importer
         // TODO: Move to a util class in the Jira folder?
         private static async Task<Jira.IssueResponse> createNewJiraIssue(Jira.IssueRequest issueRequest)
         {
-            string BASE_URL = ConfigurationManager.AppSettings["BaseURI"];
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri(BASE_URL);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
+                SetCommonHeaders(client);
                 HttpResponseMessage response = await client.PutAsJsonAsync<Jira.IssueRequest>("issue", issueRequest);
 
                 if (response.IsSuccessStatusCode)
@@ -102,6 +117,17 @@ namespace Importer
             }
 
             return null;
+        }
+
+        private static void SetCommonHeaders (HttpClient client)
+        {
+            var baseUrl = ConfigurationManager.AppSettings["BaseURI"];
+            var token = Encoding.ASCII.GetBytes(string.Format("{0}:{1}", jiraUserName, jiraPassword));
+
+            client.BaseAddress = new Uri(baseUrl);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(token));
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
     }
 }
