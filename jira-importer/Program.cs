@@ -5,6 +5,8 @@ using System;
 using System.Xml;
 using System.Xml.Serialization;
 using System.IO;
+using System;
+using System.Configuration;
 using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Importer
@@ -13,10 +15,16 @@ namespace Importer
     {
         static void Main(string[] args)
         {
-            var reader = XmlReader.Create("MBL.xml"); // TODO: Don't hardcode
+            var dir = ConfigurationManager.AppSettings["YouTrackXMLDir"];
+            var di = new DirectoryInfo(dir);
+            if (!di.Exists)
+            {
+                di.Create();
+                Console.WriteLine("Missing XML files in " + dir);
+                Console.ReadLine();
+                return;
+            }
 
-            var s = new XmlSerializer(typeof(YouTrack.Issues));
-            var issues = (YouTrack.Issues)s.Deserialize(reader);
             var youTrackToJiraTypeMapping = new Dictionary<string, Jira.IssueType> // TODO: Move
             {
                 {
@@ -33,6 +41,12 @@ namespace Importer
                 },
                 {
                     "Usability Problem", Jira.IssueType.Task
+                },
+                {
+                    "Story", Jira.IssueType.UseCase
+                },
+                {
+                    "Performance Problem", Jira.IssueType.Defect
                 }
             };
 
@@ -52,6 +66,21 @@ namespace Importer
                 },
                 {
                     "Minor", "Trivial"
+                },
+                {
+                    "P5 - Minor", "Minor" 
+                },
+                {
+                    "P4- Normal", "Minor" 
+                },
+                {
+                    "P3 - Major", "Major" 
+                },
+                {
+                    "P2 - Critical", "Critical" 
+                },
+                {
+                    "P1 - Show-stopper", "Blocker"
                 }
             };
 
@@ -60,7 +89,7 @@ namespace Importer
                 {
                     "numberInProject", delegate(YouTrack.Field field, Jira.IssueRequest request)
                     {
-                        request.DefectId = "MBL-" + field.Value;
+                        request.DefectId = request.ProjectId + "-" + field.Value;
                     }
                 },
                 {
@@ -89,38 +118,51 @@ namespace Importer
                 }
             };
 
-            foreach (var issue in issues.Issue)
+            var files = di.GetFiles("*.xml", SearchOption.TopDirectoryOnly);
+            foreach (var file in files)
             {
-                var jiraIssue = new Jira.IssueRequest
-                {
-                    JiraProjectRequest = { Key = "INFORCRM" }, // TODO: Don't hardcode
-                    JiraIssueType = Jira.IssueType.Bug,
-                    Description = string.Empty,
-                    Summary = string.Empty
-                };
+                var reader = XmlReader.Create(file.FullName);
+                var projectId = file.Name.Replace(file.Extension, string.Empty);
 
-                jiraIssue.Versions.Add(new MultiSelect { Value = "Mobile 3.3" }); // TODO: Don't hardcode
+                var s = new XmlSerializer(typeof(YouTrack.Issues));
+                var issues = (YouTrack.Issues)s.Deserialize(reader);
 
-                foreach (var field in issue.Fields)
+                foreach (var issue in issues.Issue)
                 {
-                    Action<YouTrack.Field, Jira.IssueRequest> action;
-                    if (mapping.TryGetValue(field.Name, out action))
+                    var jiraIssue = new Jira.IssueRequest
                     {
-                        action(field, jiraIssue);
+                        JiraProjectRequest = { Key = "INFORCRM" }, // TODO: Don't hardcode
+                        JiraIssueType = Jira.IssueType.Bug,
+                        Description = string.Empty,
+                        Summary = string.Empty,
+                        ProjectId = projectId
+                    };
+
+                    jiraIssue.Versions.Add(new MultiSelect { Value = "Mobile 3.3" }); // TODO: Don't hardcode
+
+                    foreach (var field in issue.Fields)
+                    {
+                        Action<YouTrack.Field, Jira.IssueRequest> action;
+                        if (mapping.TryGetValue(field.Name, out action))
+                        {
+                            action(field, jiraIssue);
+                        }
                     }
-                }
 
-                //var json = JsonConvert.SerializeObject(jiraIssue, Formatting.Indented);
-                //Console.WriteLine(json);
+                    //var json = JsonConvert.SerializeObject(jiraIssue, Formatting.Indented);
+                    //Console.WriteLine(json);
 
-                using (var file = File.CreateText(jiraIssue.DefectId + ".json"))
-                {
-                    var serializer = new JsonSerializer { Formatting = Formatting.Indented };
-                    serializer.Serialize(file, jiraIssue);
+                    var jsonOutDir = file.DirectoryName + "\\" + projectId + "\\";
+                    Directory.CreateDirectory(jsonOutDir);
+                    using (var json = File.CreateText(jsonOutDir + jiraIssue.DefectId + ".json"))
+                    {
+                        var serializer = new JsonSerializer { Formatting = Formatting.Indented };
+                        serializer.Serialize(json, jiraIssue);
+                    }
                 }
             }
 
-            Console.WriteLine();
+            Console.WriteLine("Done");
             Console.ReadLine();
         }
     }

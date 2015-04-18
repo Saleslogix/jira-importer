@@ -26,7 +26,10 @@ namespace Importer.Jira
         public string DefectId { get; set; }
 
         [JsonProperty("versions")]
-        public List<MultiSelect> Versions { get; set; } 
+        public List<MultiSelect> Versions { get; set; }
+
+        [JsonIgnore]
+        public string ProjectId { get; set; }
 
         public IssueRequest()
         {
