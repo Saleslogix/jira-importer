@@ -1,12 +1,14 @@
-﻿using System.Collections.Generic;
-using Importer.Jira.Fields;
+﻿using Importer.Jira.Fields;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
-using System.IO;
-using System;
-using System.Configuration;
 using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Importer
@@ -15,110 +17,18 @@ namespace Importer
     {
         static void Main(string[] args)
         {
-            var dir = ConfigurationManager.AppSettings["YouTrackXMLDir"];
-            var di = new DirectoryInfo(dir);
-            if (!di.Exists)
+            var xmlDir = ConfigurationManager.AppSettings["YouTrackXMLDir"];
+            var xmlDirInfo = new DirectoryInfo(xmlDir);
+
+            if (!xmlDirInfo.Exists)
             {
-                di.Create();
-                Console.WriteLine("Missing XML files in " + dir);
+                xmlDirInfo.Create();
+                Console.WriteLine("Missing XML files in " + xmlDir);
                 Console.ReadLine();
                 return;
             }
 
-            var youTrackToJiraTypeMapping = new Dictionary<string, Jira.IssueType> // TODO: Move
-            {
-                {
-                    "Bug", Jira.IssueType.Bug
-                },
-                {
-                    "Cosmetics", Jira.IssueType.Task
-                },
-                {
-                    "Feature", Jira.IssueType.NewFeature
-                },
-                {
-                    "Task", Jira.IssueType.Task
-                },
-                {
-                    "Usability Problem", Jira.IssueType.Task
-                },
-                {
-                    "Story", Jira.IssueType.UseCase
-                },
-                {
-                    "Performance Problem", Jira.IssueType.Defect
-                }
-            };
-
-            var youTrackToJiraPriorityMapping = new Dictionary<string, string> // TODO: Move
-            {
-                {
-                    "Show-stopper", "Blocker"
-                },
-                {
-                    "Critical", "Critical"
-                },
-                {
-                    "Major", "Major"
-                },
-                {
-                    "Normal", "Minor"
-                },
-                {
-                    "Minor", "Trivial"
-                },
-                {
-                    "P5 - Minor", "Minor" 
-                },
-                {
-                    "P4- Normal", "Minor" 
-                },
-                {
-                    "P3 - Major", "Major" 
-                },
-                {
-                    "P2 - Critical", "Critical" 
-                },
-                {
-                    "P1 - Show-stopper", "Blocker"
-                }
-            };
-
-            var mapping = new Dictionary<string, Action<YouTrack.Field, Jira.IssueRequest>> // TODO: Move
-            {
-                {
-                    "numberInProject", delegate(YouTrack.Field field, Jira.IssueRequest request)
-                    {
-                        request.DefectId = request.ProjectId + "-" + field.Value;
-                    }
-                },
-                {
-                    "description", delegate(YouTrack.Field field, Jira.IssueRequest request)
-                    {
-                        request.Description = field.Value;
-                    }
-                },
-                {
-                    "summary", delegate(YouTrack.Field field, Jira.IssueRequest request)
-                    {
-                        request.Summary = field.Value;
-                    }
-                },
-                {
-                    "Type", delegate(YouTrack.Field field, Jira.IssueRequest request)
-                    {
-                        request.JiraIssueType = youTrackToJiraTypeMapping[field.Value];
-                    }
-                },
-                {
-                    "Priority", delegate(YouTrack.Field field, Jira.IssueRequest request)
-                    {
-                        request.Priority = youTrackToJiraPriorityMapping[field.Value];
-                    }
-                }
-            };
-
-            var files = di.GetFiles("*.xml", SearchOption.TopDirectoryOnly);
+            var files = xmlDirInfo.GetFiles("*.xml", SearchOption.TopDirectoryOnly);
             foreach (var file in files)
             {
                 var reader = XmlReader.Create(file.FullName);
@@ -143,7 +53,7 @@ namespace Importer
                     foreach (var field in issue.Fields)
                     {
                         Action<YouTrack.Field, Jira.IssueRequest> action;
-                        if (mapping.TryGetValue(field.Name, out action))
+                        if (Mappings.YouTrackToJira.Properties.TryGetValue(field.Name, out action))
                         {
                             action(field, jiraIssue);
                         }
@@ -159,11 +69,39 @@ namespace Importer
                         var serializer = new JsonSerializer { Formatting = Formatting.Indented };
                         serializer.Serialize(json, jiraIssue);
                     }
+
+                    /*Jira.IssueResponse response = await createNewJiraIssue(jiraIssue);
+                    if (response != null)
+                    {
+                        Console.WriteLine("New issue created with ID: " + response.Id);
+                    }*/
                 }
             }
 
             Console.WriteLine("Done");
             Console.ReadLine();
+        }
+
+        // TODO: Move to a util class in the Jira folder?
+        private static async Task<Jira.IssueResponse> createNewJiraIssue(Jira.IssueRequest issueRequest)
+        {
+            string BASE_URL = ConfigurationManager.AppSettings["BaseURI"];
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(BASE_URL);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                HttpResponseMessage response = await client.PutAsJsonAsync<Jira.IssueRequest>("issue", issueRequest);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Jira.IssueResponse results = await response.Content.ReadAsAsync<Jira.IssueResponse>();
+                    return results;
+                }
+            }
+
+            return null;
         }
     }
 }

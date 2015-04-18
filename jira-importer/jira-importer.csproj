@@ -39,6 +39,11 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -46,11 +51,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Jira\CommentRequest.cs" />
     <Compile Include="Jira\Fields\MultiSelect.cs" />
     <Compile Include="Jira\IssueRequest.cs" />
     <Compile Include="Jira\IssueResponse.cs" />
     <Compile Include="Jira\IssueType.cs" />
     <Compile Include="Jira\ProjectRequest.cs" />
+    <Compile Include="Mappings\YouTrackToJira.cs" />
     <Compile Include="YouTrack\Comment.cs" />
     <Compile Include="YouTrack\Field.cs" />
     <Compile Include="YouTrack\Issue.cs" />
