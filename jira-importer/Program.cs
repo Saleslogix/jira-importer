@@ -152,9 +152,9 @@ namespace Importer
                     //var json = JsonConvert.SerializeObject(jiraIssue, Formatting.Indented);
                     //Console.WriteLine(json);
 
-                    var jsonOutDir = file.DirectoryName + "\\" + projectId + "\\";
+                    var jsonOutDir = Path.Combine(file.DirectoryName, projectId);
                     Directory.CreateDirectory(jsonOutDir);
-                    using (var json = File.CreateText(jsonOutDir + jiraIssue.DefectId + ".json"))
+                    using (var json = File.CreateText(Path.Combine(jsonOutDir, jiraIssue.DefectId + ".json")))
                     {
                         var serializer = new JsonSerializer { Formatting = Formatting.Indented };
                         serializer.Serialize(json, jiraIssue);
