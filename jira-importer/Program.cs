@@ -62,14 +62,19 @@ namespace Importer
                 {
                     var jiraIssue = new Jira.IssueRequest
                     {
-                        JiraProjectRequest = { Key = "INFORCRM" }, // TODO: Don't hardcode
-                        JiraIssueType = Jira.IssueType.Bug,
-                        Description = string.Empty,
-                        Summary = string.Empty,
-                        ProjectId = projectId
+                        Fields = {
+                            JiraProjectRequest = { Key = "INFORCRM" }, // TODO: Don't hardcode
+                            JiraIssueType = Jira.IssueType.Bug,
+                            Description = string.Empty,
+                            Summary = string.Empty,
+                            ProjectId = projectId
+                        }
+                        
                     };
 
-                    jiraIssue.Versions.Add(new MultiSelect { Value = "Mobile 3.3" }); // TODO: Don't hardcode
+                    jiraIssue.Fields.Versions.Add(new VersionPicker { Name = "Mobile 3.3" }); // TODO: Don't hardcode
+                    jiraIssue.Fields.FixVersions.Add(new VersionPicker { Name = "Mobile 3.3" }); // TODO: Don't hardcode
+                    jiraIssue.Fields.Components.Add(new Components { Name = "Mobile" }); // TODO: Don't hardcode
 
                     foreach (var youtrackIssueField in youtrackIssue.Fields)
                     {
@@ -83,7 +88,7 @@ namespace Importer
                     // Write out the issue payloads
                     var jsonOutDir = Path.Combine(youtrackExportFile.DirectoryName, projectId);
                     Directory.CreateDirectory(jsonOutDir);
-                    using (var json = File.CreateText(Path.Combine(jsonOutDir, string.Format("{0}.json", jiraIssue.DefectId))))
+                    using (var json = File.CreateText(Path.Combine(jsonOutDir, string.Format("{0}.json", jiraIssue.Fields.DefectId))))
                     {
                         var jsonSerializer = new JsonSerializer { Formatting = Formatting.Indented };
                         jsonSerializer.Serialize(json, jiraIssue);
@@ -96,16 +101,17 @@ namespace Importer
                     for (int i = 0; i < comments.Length; i++)
                     {
                         var c = comments[i];
-                        using (var commentJson = File.CreateText(Path.Combine(jsonOutDir, string.Format("{0}-comment-{1}.json", jiraIssue.DefectId, i))))
+                        using (var commentJson = File.CreateText(Path.Combine(jsonOutDir, string.Format("{0}-comment-{1}.json", jiraIssue.Fields.DefectId, i))))
                         {
                             var jsonSerializer = new JsonSerializer { Formatting = Formatting.Indented };
                             jsonSerializer.Serialize(commentJson, c);
                         }
                     }
 
-                    pending.Add(createNewJiraIssue(jiraIssue, comments));
+                    //pending.Add(createNewJiraIssue(jiraIssue, comments));
                 }
 
+                /*
                 try
                 {
                     Task.WaitAll(pending.ToArray());
@@ -118,7 +124,7 @@ namespace Importer
                         Console.WriteLine(inner.ToString());
                     }
                 }
-                
+                */
             }
 
             Console.WriteLine("Done");

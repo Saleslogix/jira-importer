@@ -4,8 +4,18 @@ using Newtonsoft.Json;
 
 namespace Importer.Jira
 {
-    [JsonObject("fields")]
     public class IssueRequest
+    {
+        [JsonProperty("fields")]
+        public IssueFields Fields { get; set; }
+
+        public IssueRequest()
+        {
+            Fields = new IssueFields();
+        }
+    }
+
+    public class IssueFields
     {
         [JsonProperty("project")]
         public ProjectRequest JiraProjectRequest { get; set; }
@@ -17,7 +27,7 @@ namespace Importer.Jira
         public string Description { get; set; }
 
         [JsonProperty("priority")]
-        public string Priority { get; set; }
+        public Priority Priority { get; set; }
 
         [JsonProperty("issuetype")]
         public IssueType JiraIssueType { get; set; }
@@ -26,15 +36,26 @@ namespace Importer.Jira
         public string DefectId { get; set; }
 
         [JsonProperty("versions")]
-        public List<MultiSelect> Versions { get; set; }
+        public List<VersionPicker> Versions { get; set; }
+
+        [JsonProperty("fixVersions")]
+        public List<VersionPicker> FixVersions { get; set; }
+
+        [JsonProperty("assignee")]
+        public Assignee Assignee { get; set; }
+
+        [JsonProperty("components")]
+        public List<Components> Components { get; set; }
 
         [JsonIgnore]
         public string ProjectId { get; set; }
 
-        public IssueRequest()
+        public IssueFields()
         {
             JiraProjectRequest = new ProjectRequest();
-            Versions = new List<MultiSelect>();
+            Versions = new List<VersionPicker>();
+            FixVersions = new List<VersionPicker>();
+            Components = new List<Components>();
         }
     }
 

@@ -79,6 +79,37 @@ namespace Importer.Mappings
             }
         }
 
+        public static Dictionary<string, string> Users
+        {
+            get
+            {
+                return new Dictionary<string, string>
+                {
+                    {
+                        "jbest", "jbest2"
+                    },
+                    {
+                        "chenrie", "chenrie"
+                    },
+                    {
+                        "kbratton", "klockyer-bratton"
+                    },
+                    {
+                        "bdonison", "bdonison"
+                    },
+                    {
+                        "mphipps", "mphipps"
+                    },
+                    {
+                        "root", "jperona"
+                    },
+                    {
+                        "default", "klockyer-bratton"
+                    }
+                };
+            }
+        }
+
         public static Dictionary<string, Action<YouTrack.Field, Jira.IssueRequest>> Properties 
         {
             get
@@ -88,31 +119,61 @@ namespace Importer.Mappings
                     {
                         "numberInProject", delegate(YouTrack.Field field, Jira.IssueRequest request)
                         {
-                            request.DefectId = request.ProjectId + "-" + field.Value;
+                            request.Fields.DefectId = request.Fields.ProjectId + "-" + field.Value;
                         }
                     },
                     {
                         "description", delegate(YouTrack.Field field, Jira.IssueRequest request)
                         {
-                            request.Description = field.Value;
+                            request.Fields.Description = field.Value;
                         }
                     },
                     {
                         "summary", delegate(YouTrack.Field field, Jira.IssueRequest request)
                         {
-                            request.Summary = field.Value;
+                            request.Fields.Summary = field.Value;
                         }
                     },
                     {
                         "Type", delegate(YouTrack.Field field, Jira.IssueRequest request)
                         {
-                            request.JiraIssueType = Mappings.YouTrackToJira.IssueType[field.Value];
+                            request.Fields.JiraIssueType = Mappings.YouTrackToJira.IssueType[field.Value];
                         }
                     },
                     {
                         "Priority", delegate(YouTrack.Field field, Jira.IssueRequest request)
                         {
-                            request.Priority = Mappings.YouTrackToJira.Priority[field.Value];
+                            request.Fields.Priority = new Jira.Fields.Priority{ Name = Mappings.YouTrackToJira.Priority[field.Value] };
+                        }
+                    },
+                    {
+                        "Assignee", delegate(YouTrack.Field field, Jira.IssueRequest request)
+                        {
+                            string value = "";
+                            const string defaultUser = "default";
+                            if (Users.TryGetValue(field.Value ?? defaultUser, out value))
+                            {
+                                request.Fields.Assignee = new Jira.Fields.Assignee { Name = value };
+                            }
+                            else
+                            {
+                                request.Fields.Assignee = new Jira.Fields.Assignee { Name = Users[defaultUser] };
+                            }
+                        }
+                    },
+                    {
+                        "reporterName", delegate(YouTrack.Field field, Jira.IssueRequest request)
+                        {
+                            string value = "";
+                            const string defaultUser = "default";
+                            if (Users.TryGetValue(field.Value ?? defaultUser, out value))
+                            {
+                                request.Fields.Assignee = new Jira.Fields.Assignee { Name = value };
+                            }
+                            else
+                            {
+                                request.Fields.Assignee = new Jira.Fields.Assignee { Name = Users[defaultUser] };
+                            }
                         }
                     }
                 };
