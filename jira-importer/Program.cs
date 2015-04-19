@@ -78,9 +78,8 @@ namespace Importer
                         }
                     }
 
-                    //var json = JsonConvert.SerializeObject(jiraIssue, Formatting.Indented);
-                    //Console.WriteLine(json);
-
+                    // This is temp code to inspect the JSON before doing a real post,
+                    // TODO: Remove me
                     var jsonOutDir = Path.Combine(file.DirectoryName, projectId);
                     Directory.CreateDirectory(jsonOutDir);
                     using (var json = File.CreateText(Path.Combine(jsonOutDir, string.Format("{0}.json", jiraIssue.DefectId))))
@@ -89,11 +88,28 @@ namespace Importer
                         serializer.Serialize(json, jiraIssue);
                     }
 
-                    /*Jira.IssueResponse response = await createNewJiraIssue(jiraIssue);
-                    if (response != null)
+                    // This will be the production code that actually does the post
+                    // TODO: Build up an IEnumerable<Task> list for creating an issue+comments?
+                    Task<Jira.IssueResponse> response = createNewJiraIssue(jiraIssue);
+                    var result = response.Result; // Blocking
+                    if (result != null)
                     {
-                        Console.WriteLine("New issue created with ID: " + response.Id);
-                    }*/
+                        Console.WriteLine(string.Format("New issue created with ID: {0}", result.Id));
+                        foreach (var comment in issue.Comments)
+                        {
+                            var commentRequest = new Jira.CommentRequest { Body = comment.Text };
+                            Task<HttpStatusCode> status = createJiraComment(result.Id, commentRequest);
+                            var results = status.Result; // Block to re-recreate the comments in-order
+                            if (results == HttpStatusCode.OK)
+                            {
+                                Console.WriteLine(string.Format("Comment for {0} created.", result.Id));
+                            }
+                            else
+                            {
+                                Console.WriteLine(string.Format("Failed to create comment for {0}.", result.Id));
+                            }
+                        }
+                    }
                 }
             }
 
@@ -107,16 +123,29 @@ namespace Importer
             using (var client = new HttpClient())
             {
                 SetCommonHeaders(client);
-                HttpResponseMessage response = await client.PutAsJsonAsync<Jira.IssueRequest>("issue", issueRequest);
+                HttpResponseMessage response = await client.PostAsJsonAsync<Jira.IssueRequest>("issue", issueRequest);
 
                 if (response.IsSuccessStatusCode)
                 {
                     Jira.IssueResponse results = await response.Content.ReadAsAsync<Jira.IssueResponse>();
                     return results;
                 }
+                else
+                {
+                    return null;
+                }
             }
+        }
 
-            return null;
+        private static async Task<HttpStatusCode> createJiraComment(string issueId, Jira.CommentRequest commentRequest)
+        {
+            using (var client = new HttpClient())
+            {
+                SetCommonHeaders(client);
+                // Posting the comment doesn't return back a JSON response, just check the status code
+                HttpResponseMessage response = await client.PostAsJsonAsync<Jira.CommentRequest>(string.Format("issue/{0}/comment", issueId), commentRequest);
+                return response.StatusCode;
+            }
         }
 
         private static void SetCommonHeaders (HttpClient client)
