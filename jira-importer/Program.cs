@@ -95,7 +95,7 @@ namespace Importer
                     }
 
                    
-                    var comments = youtrackIssue.Comments.Select(c => new Jira.CommentRequest { Body = c.Text }).ToArray();
+                    var comments = youtrackIssue.Comments.Select(c => new Jira.CommentRequest { Body = string.Format("YouTrack Author: {0}\r\n{1}" ,c.Author, c.Text) }).ToArray();
 
                     // Write out the comments payloads
                     for (int i = 0; i < comments.Length; i++)
@@ -108,10 +108,9 @@ namespace Importer
                         }
                     }
 
-                    //pending.Add(createNewJiraIssue(jiraIssue, comments));
+                    pending.Add(createNewJiraIssue(jiraIssue, comments));
                 }
 
-                /*
                 try
                 {
                     Task.WaitAll(pending.ToArray());
@@ -124,7 +123,6 @@ namespace Importer
                         Console.WriteLine(inner.ToString());
                     }
                 }
-                */
             }
 
             Console.WriteLine("Done");
@@ -162,6 +160,7 @@ namespace Importer
                 }
                 else
                 {
+                    Console.WriteLine(string.Format("Failed to create issue {0}.", issueRequest.Fields.DefectId));
                     return null;
                 }
             }

@@ -160,21 +160,6 @@ namespace Importer.Mappings
                                 request.Fields.Assignee = new Jira.Fields.User { Name = Users[defaultUser] };
                             }
                         }
-                    },
-                    {
-                        "reporterName", delegate(YouTrack.Field field, Jira.IssueRequest request)
-                        {
-                            string value = "";
-                            const string defaultUser = "default";
-                            if (Users.TryGetValue(field.Value ?? defaultUser, out value))
-                            {
-                                request.Fields.Reporter = new Jira.Fields.User { Name = value };
-                            }
-                            else
-                            {
-                                request.Fields.Reporter = new Jira.Fields.User { Name = Users[defaultUser] };
-                            }
-                        }
                     }
                 };
             }

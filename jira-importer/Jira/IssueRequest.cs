@@ -44,8 +44,9 @@ namespace Importer.Jira
         [JsonProperty("assignee")]
         public User Assignee { get; set; }
 
-        [JsonProperty("reporter")]
-        public User Reporter { get; set; }
+        // API does not let us set this
+        //[JsonProperty("reporter")]
+        //public User Reporter { get; set; }
 
         [JsonProperty("components")]
         public List<Components> Components { get; set; }
