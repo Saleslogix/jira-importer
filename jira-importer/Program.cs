@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -47,16 +48,17 @@ namespace Importer
                 return;
             }
 
-            var files = xmlDirInfo.GetFiles("*.xml", SearchOption.TopDirectoryOnly);
-            foreach (var file in files)
+            var youtrackExportFiles = xmlDirInfo.GetFiles("*.xml", SearchOption.TopDirectoryOnly);
+            foreach (var youtrackExportFile in youtrackExportFiles)
             {
-                var reader = XmlReader.Create(file.FullName);
-                var projectId = file.Name.Replace(file.Extension, string.Empty);
+                var reader = XmlReader.Create(youtrackExportFile.FullName);
+                var projectId = youtrackExportFile.Name.Replace(youtrackExportFile.Extension, string.Empty);
 
-                var s = new XmlSerializer(typeof(YouTrack.Issues));
-                var issues = (YouTrack.Issues)s.Deserialize(reader);
+                var xmlSerializer = new XmlSerializer(typeof(YouTrack.Issues));
+                var youtrackIssues = (YouTrack.Issues)xmlSerializer.Deserialize(reader);
+                var pending = new List<Task<Jira.IssueResponse>>();
 
-                foreach (var issue in issues.Issue)
+                foreach (YouTrack.Issue youtrackIssue in youtrackIssues.Issue)
                 {
                     var jiraIssue = new Jira.IssueRequest
                     {
@@ -69,48 +71,30 @@ namespace Importer
 
                     jiraIssue.Versions.Add(new MultiSelect { Value = "Mobile 3.3" }); // TODO: Don't hardcode
 
-                    foreach (var field in issue.Fields)
+                    foreach (var youtrackIssueField in youtrackIssue.Fields)
                     {
-                        Action<YouTrack.Field, Jira.IssueRequest> action;
-                        if (Mappings.YouTrackToJira.Properties.TryGetValue(field.Name, out action))
+                        Action<YouTrack.Field, Jira.IssueRequest> propertyAction;
+                        if (Mappings.YouTrackToJira.Properties.TryGetValue(youtrackIssueField.Name, out propertyAction))
                         {
-                            action(field, jiraIssue);
+                            propertyAction(youtrackIssueField, jiraIssue);
                         }
                     }
 
                     // This is temp code to inspect the JSON before doing a real post,
                     // TODO: Remove me
-                    var jsonOutDir = Path.Combine(file.DirectoryName, projectId);
+                    var jsonOutDir = Path.Combine(youtrackExportFile.DirectoryName, projectId);
                     Directory.CreateDirectory(jsonOutDir);
                     using (var json = File.CreateText(Path.Combine(jsonOutDir, string.Format("{0}.json", jiraIssue.DefectId))))
                     {
-                        var serializer = new JsonSerializer { Formatting = Formatting.Indented };
-                        serializer.Serialize(json, jiraIssue);
+                        var jsonSerializer = new JsonSerializer { Formatting = Formatting.Indented };
+                        jsonSerializer.Serialize(json, jiraIssue);
                     }
 
-                    // This will be the production code that actually does the post
-                    // TODO: Build up an IEnumerable<Task> list for creating an issue+comments?
-                    Task<Jira.IssueResponse> response = createNewJiraIssue(jiraIssue);
-                    var result = response.Result; // Blocking
-                    if (result != null)
-                    {
-                        Console.WriteLine(string.Format("New issue created with ID: {0}", result.Id));
-                        foreach (var comment in issue.Comments)
-                        {
-                            var commentRequest = new Jira.CommentRequest { Body = comment.Text };
-                            Task<HttpStatusCode> status = createJiraComment(result.Id, commentRequest);
-                            var results = status.Result; // Block to re-recreate the comments in-order
-                            if (results == HttpStatusCode.OK)
-                            {
-                                Console.WriteLine(string.Format("Comment for {0} created.", result.Id));
-                            }
-                            else
-                            {
-                                Console.WriteLine(string.Format("Failed to create comment for {0}.", result.Id));
-                            }
-                        }
-                    }
+                    IEnumerable<Jira.CommentRequest> comments = youtrackIssue.Comments.Select(c => new Jira.CommentRequest { Body = c.Text });
+                    pending.Add(createNewJiraIssue(jiraIssue, comments));
                 }
+
+                Task.WaitAll(pending.ToArray());
             }
 
             Console.WriteLine("Done");
@@ -118,7 +102,7 @@ namespace Importer
         }
 
         // TODO: Move to a util class in the Jira folder?
-        private static async Task<Jira.IssueResponse> createNewJiraIssue(Jira.IssueRequest issueRequest)
+        private static async Task<Jira.IssueResponse> createNewJiraIssue(Jira.IssueRequest issueRequest, IEnumerable<Jira.CommentRequest> comments)
         {
             using (var client = new HttpClient())
             {
@@ -127,8 +111,23 @@ namespace Importer
 
                 if (response.IsSuccessStatusCode)
                 {
-                    Jira.IssueResponse results = await response.Content.ReadAsAsync<Jira.IssueResponse>();
-                    return results;
+                    Jira.IssueResponse issueResults = await response.Content.ReadAsAsync<Jira.IssueResponse>();
+                    Console.WriteLine(string.Format("New issue created with ID: {0}", issueResults.Id));
+                    foreach (var comment in comments)
+                    {
+                        Task<HttpStatusCode> status = createJiraComment(issueResults.Id, comment);
+                        var statusResult = status.Result; // Block to preserve order
+                        if (statusResult == HttpStatusCode.OK)
+                        {
+                            Console.WriteLine(string.Format("Comment for {0} created.", issueResults.Id));
+                        }
+                        else
+                        {
+                            Console.WriteLine(string.Format("Failed to create comment for {0}.", issueResults.Id));
+                        }
+                    }
+                    
+                    return issueResults;
                 }
                 else
                 {
