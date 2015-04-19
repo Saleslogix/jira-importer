@@ -94,7 +94,19 @@ namespace Importer
                     pending.Add(createNewJiraIssue(jiraIssue, comments));
                 }
 
-                Task.WaitAll(pending.ToArray());
+                try
+                {
+                    Task.WaitAll(pending.ToArray());
+                }
+                catch (AggregateException e)
+                {
+                    Console.WriteLine("Exceptions thrown when creating issues.");
+                    foreach (var inner in e.InnerExceptions)
+                    {
+                        Console.WriteLine(inner.ToString());
+                    }
+                }
+                
             }
 
             Console.WriteLine("Done");
