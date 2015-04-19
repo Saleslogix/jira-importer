@@ -35,10 +35,10 @@ namespace Importer
             }
 
             // Auth
-            Console.WriteLine("Jira Username: ");
+            Console.Write("Jira Username: ");
             jiraUserName = Console.ReadLine();
 
-            Console.WriteLine("Jira Password: ");
+            Console.Write("\nJira Password: ");
             jiraPassword = Console.ReadLine();
 
             if (string.IsNullOrWhiteSpace(jiraUserName) || string.IsNullOrWhiteSpace(jiraPassword))
@@ -80,8 +80,7 @@ namespace Importer
                         }
                     }
 
-                    // This is temp code to inspect the JSON before doing a real post,
-                    // TODO: Remove me
+                    // Write out the issue payloads
                     var jsonOutDir = Path.Combine(youtrackExportFile.DirectoryName, projectId);
                     Directory.CreateDirectory(jsonOutDir);
                     using (var json = File.CreateText(Path.Combine(jsonOutDir, string.Format("{0}.json", jiraIssue.DefectId))))
@@ -90,7 +89,20 @@ namespace Importer
                         jsonSerializer.Serialize(json, jiraIssue);
                     }
 
-                    IEnumerable<Jira.CommentRequest> comments = youtrackIssue.Comments.Select(c => new Jira.CommentRequest { Body = c.Text });
+                   
+                    var comments = youtrackIssue.Comments.Select(c => new Jira.CommentRequest { Body = c.Text }).ToArray();
+
+                    // Write out the comments payloads
+                    for (int i = 0; i < comments.Length; i++)
+                    {
+                        var c = comments[i];
+                        using (var commentJson = File.CreateText(Path.Combine(jsonOutDir, string.Format("{0}-comment-{1}.json", jiraIssue.DefectId, i))))
+                        {
+                            var jsonSerializer = new JsonSerializer { Formatting = Formatting.Indented };
+                            jsonSerializer.Serialize(commentJson, c);
+                        }
+                    }
+
                     pending.Add(createNewJiraIssue(jiraIssue, comments));
                 }
 
@@ -114,7 +126,7 @@ namespace Importer
         }
 
         // TODO: Move to a util class in the Jira folder?
-        private static async Task<Jira.IssueResponse> createNewJiraIssue(Jira.IssueRequest issueRequest, IEnumerable<Jira.CommentRequest> comments)
+        private static async Task<Jira.IssueResponse> createNewJiraIssue(Jira.IssueRequest issueRequest, Jira.CommentRequest[] comments)
         {
             using (var client = new HttpClient())
             {
@@ -128,7 +140,8 @@ namespace Importer
                     foreach (var comment in comments)
                     {
                         Task<HttpStatusCode> status = createJiraComment(issueResults.Id, comment);
-                        var statusResult = status.Result; // Block to preserve order
+                        var statusResult = status.Result; // Block to preserve comment order
+
                         if (statusResult == HttpStatusCode.OK)
                         {
                             Console.WriteLine(string.Format("Comment for {0} created.", issueResults.Id));
