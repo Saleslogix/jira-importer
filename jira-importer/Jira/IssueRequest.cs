@@ -42,10 +42,10 @@ namespace Importer.Jira
         public List<VersionPicker> FixVersions { get; set; }
 
         [JsonProperty("assignee")]
-        public Assignee Assignee { get; set; }
+        public User Assignee { get; set; }
 
         [JsonProperty("reporter")]
-        public Assignee Reporter { get; set; }
+        public User Reporter { get; set; }
 
         [JsonProperty("components")]
         public List<Components> Components { get; set; }

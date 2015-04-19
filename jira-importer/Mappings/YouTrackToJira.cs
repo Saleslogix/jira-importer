@@ -153,11 +153,11 @@ namespace Importer.Mappings
                             const string defaultUser = "default";
                             if (Users.TryGetValue(field.Value ?? defaultUser, out value))
                             {
-                                request.Fields.Assignee = new Jira.Fields.Assignee { Name = value };
+                                request.Fields.Assignee = new Jira.Fields.User { Name = value };
                             }
                             else
                             {
-                                request.Fields.Assignee = new Jira.Fields.Assignee { Name = Users[defaultUser] };
+                                request.Fields.Assignee = new Jira.Fields.User { Name = Users[defaultUser] };
                             }
                         }
                     },
@@ -168,11 +168,11 @@ namespace Importer.Mappings
                             const string defaultUser = "default";
                             if (Users.TryGetValue(field.Value ?? defaultUser, out value))
                             {
-                                request.Fields.Reporter = new Jira.Fields.Assignee { Name = value };
+                                request.Fields.Reporter = new Jira.Fields.User { Name = value };
                             }
                             else
                             {
-                                request.Fields.Reporter = new Jira.Fields.Assignee { Name = Users[defaultUser] };
+                                request.Fields.Reporter = new Jira.Fields.User { Name = Users[defaultUser] };
                             }
                         }
                     }

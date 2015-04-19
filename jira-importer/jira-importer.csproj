@@ -52,7 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Jira\CommentRequest.cs" />
-    <Compile Include="Jira\Fields\Assignee.cs" />
+    <Compile Include="Jira\Fields\User.cs" />
     <Compile Include="Jira\Fields\Components.cs" />
     <Compile Include="Jira\Fields\MultiSelect.cs" />
     <Compile Include="Jira\Fields\Priority.cs" />

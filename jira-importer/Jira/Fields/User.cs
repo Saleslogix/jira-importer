@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Importer.Jira.Fields
 {
-    public class Assignee
+    public class User
     {
         [JsonProperty("name")]
         public string Name { get; set; }
