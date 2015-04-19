@@ -44,6 +44,9 @@ namespace Importer.Jira
         [JsonProperty("assignee")]
         public Assignee Assignee { get; set; }
 
+        [JsonProperty("reporter")]
+        public Assignee Reporter { get; set; }
+
         [JsonProperty("components")]
         public List<Components> Components { get; set; }
 
