@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using Importer.Jira.Fields;
+﻿using Importer.Jira.Fields;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Importer.Jira
 {
@@ -43,10 +43,6 @@ namespace Importer.Jira
 
         [JsonProperty("assignee")]
         public User Assignee { get; set; }
-
-        // API does not let us set this
-        //[JsonProperty("reporter")]
-        //public User Reporter { get; set; }
 
         [JsonProperty("components")]
         public List<Components> Components { get; set; }

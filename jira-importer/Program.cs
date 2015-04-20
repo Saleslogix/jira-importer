@@ -3,15 +3,11 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
 using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
-using System.Text;
 using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Importer
@@ -26,6 +22,7 @@ namespace Importer
             var xmlDir = ConfigurationManager.AppSettings["YouTrackXMLDir"];
             var xmlDirInfo = new DirectoryInfo(xmlDir);
 
+            // Check for the XML directory, which is where the exported XML file(s) from YouTrack go.
             if (!xmlDirInfo.Exists)
             {
                 xmlDirInfo.Create();
@@ -34,7 +31,6 @@ namespace Importer
                 return;
             }
 
-            // Auth
             Console.Write("Jira Username: ");
             jiraUserName = Console.ReadLine();
 
@@ -47,6 +43,8 @@ namespace Importer
                 Console.ReadLine();
                 return;
             }
+
+            Jira.Client.SetCredentials(jiraUserName, jiraPassword);
 
             var youtrackExportFiles = xmlDirInfo.GetFiles("*.xml", SearchOption.TopDirectoryOnly);
             foreach (var youtrackExportFile in youtrackExportFiles)
@@ -62,14 +60,15 @@ namespace Importer
                 {
                     var jiraIssue = new Jira.IssueRequest
                     {
-                        Fields = {
+                        Fields =
+                        {
                             JiraProjectRequest = { Key = "INFORCRM" }, // TODO: Don't hardcode
                             JiraIssueType = Jira.IssueType.Bug,
                             Description = string.Empty,
                             Summary = string.Empty,
                             ProjectId = projectId
                         }
-                        
+
                     };
 
                     jiraIssue.Fields.Versions.Add(new VersionPicker { Name = "Mobile 3.3" }); // TODO: Don't hardcode
@@ -94,8 +93,7 @@ namespace Importer
                         jsonSerializer.Serialize(json, jiraIssue);
                     }
 
-                   
-                    var comments = youtrackIssue.Comments.Select(c => new Jira.CommentRequest { Body = string.Format("YouTrack Author: {0}\r\n{1}" ,c.Author, c.Text) }).ToArray();
+                    var comments = youtrackIssue.Comments.Select(c => new Jira.CommentRequest { Body = string.Format("YouTrack Author: {0}\r\n{1}", c.Author, c.Text) }).ToArray();
 
                     // Write out the comments payloads
                     for (int i = 0; i < comments.Length; i++)
@@ -108,7 +106,10 @@ namespace Importer
                         }
                     }
 
-                    pending.Add(createNewJiraIssue(jiraIssue, comments));
+                    pending.Add(Jira.Client.CreateNewJiraIssue(jiraIssue, comments));
+
+                    // Prevent slamming the server with thousands of new issues + tens of comments per issue
+                    System.Threading.Thread.Sleep(1000);
                 }
 
                 try
@@ -125,67 +126,8 @@ namespace Importer
                 }
             }
 
-            Console.WriteLine("Done");
+            Console.WriteLine("Finished.");
             Console.ReadLine();
-        }
-
-        // TODO: Move to a util class in the Jira folder?
-        private static async Task<Jira.IssueResponse> createNewJiraIssue(Jira.IssueRequest issueRequest, Jira.CommentRequest[] comments)
-        {
-            using (var client = new HttpClient())
-            {
-                SetCommonHeaders(client);
-                HttpResponseMessage response = await client.PostAsJsonAsync<Jira.IssueRequest>("issue", issueRequest);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    Jira.IssueResponse issueResults = await response.Content.ReadAsAsync<Jira.IssueResponse>();
-                    Console.WriteLine(string.Format("New issue created with ID: {0}", issueResults.Id));
-                    foreach (var comment in comments)
-                    {
-                        Task<HttpStatusCode> status = createJiraComment(issueResults.Id, comment);
-                        var statusResult = status.Result; // Block to preserve comment order
-
-                        if (statusResult == HttpStatusCode.OK)
-                        {
-                            Console.WriteLine(string.Format("Comment for {0} created.", issueResults.Id));
-                        }
-                        else
-                        {
-                            Console.WriteLine(string.Format("Failed to create comment for {0}.", issueResults.Id));
-                        }
-                    }
-                    
-                    return issueResults;
-                }
-                else
-                {
-                    Console.WriteLine(string.Format("Failed to create issue {0}.", issueRequest.Fields.DefectId));
-                    return null;
-                }
-            }
-        }
-
-        private static async Task<HttpStatusCode> createJiraComment(string issueId, Jira.CommentRequest commentRequest)
-        {
-            using (var client = new HttpClient())
-            {
-                SetCommonHeaders(client);
-                // Posting the comment doesn't return back a JSON response, just check the status code
-                HttpResponseMessage response = await client.PostAsJsonAsync<Jira.CommentRequest>(string.Format("issue/{0}/comment", issueId), commentRequest);
-                return response.StatusCode;
-            }
-        }
-
-        private static void SetCommonHeaders (HttpClient client)
-        {
-            var baseUrl = ConfigurationManager.AppSettings["BaseURI"];
-            var token = Encoding.ASCII.GetBytes(string.Format("{0}:{1}", jiraUserName, jiraPassword));
-
-            client.BaseAddress = new Uri(baseUrl);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(token));
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
     }
 }

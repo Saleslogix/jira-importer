@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Importer.Mappings
 {
+    /// <summary>
+    /// Mappings for YouTrack to Jira datasets. The LHS (key) will be YouTrack, the RHS (value) will be Jira.
+    /// </summary>
     public static class YouTrackToJira
     {
         public static Dictionary<string, Jira.IssueType> IssueType
