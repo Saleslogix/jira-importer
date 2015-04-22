@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Importer.Jira
@@ -37,6 +38,7 @@ namespace Importer.Jira
                         {
                             Console.WriteLine(string.Format("Failed to create comment for {0}. YouTrack ID: {1}. Status: {2}", issueResults.Id, issueRequest.Fields.DefectId, statusResult));
                         }
+                        Thread.Sleep(1000);
                     }
 
                     return issueResults;
@@ -72,6 +74,7 @@ namespace Importer.Jira
             var token = Encoding.ASCII.GetBytes(string.Format("{0}:{1}", JIRA_USER, JIRA_PW));
 
             client.BaseAddress = new Uri(baseUrl);
+            client.Timeout = TimeSpan.FromSeconds(60);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(token));
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
