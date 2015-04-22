@@ -64,15 +64,14 @@ namespace Importer
                         {
                             JiraProjectRequest = { Key = "INFORCRM" }, // TODO: Don't hardcode
                             JiraIssueType = Jira.IssueType.Bug,
-                            Description = string.Empty,
-                            Summary = string.Empty,
+                            Description = "None",
+                            Summary = "None",
                             ProjectId = projectId
                         }
 
                     };
 
                     jiraIssue.Fields.Versions.Add(new VersionPicker { Name = "Mobile 3.3" }); // TODO: Don't hardcode
-                    jiraIssue.Fields.FixVersions.Add(new VersionPicker { Name = "Mobile 3.3" }); // TODO: Don't hardcode
                     jiraIssue.Fields.Components.Add(new Components { Name = "Mobile" }); // TODO: Don't hardcode
 
                     foreach (var youtrackIssueField in youtrackIssue.Fields)

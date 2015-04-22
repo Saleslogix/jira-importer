@@ -35,7 +35,7 @@ namespace Importer.Jira
                         }
                         else
                         {
-                            Console.WriteLine(string.Format("Failed to create comment for {0}.", issueResults.Id));
+                            Console.WriteLine(string.Format("Failed to create comment for {0}. YouTrack ID: {1}. Status: {2}", issueResults.Id, issueRequest.Fields.DefectId, statusResult));
                         }
                     }
 

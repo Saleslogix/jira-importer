@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Importer.Jira.Fields;
 
 namespace Importer.Mappings
 {
@@ -110,6 +111,76 @@ namespace Importer.Mappings
             }
         }
 
+        public static Dictionary<string, string> Versions
+        {
+            get
+            {
+                return new Dictionary<string, string>
+                {
+                    {
+                        "Sprint 2", "Mobile 3.0"
+                    },
+                    {
+                        "Sprint 3", "Mobile 3.0"
+                    },
+                    {
+                        "Sprint 4 (3.0)", "Mobile 3.0"
+                    },
+                    {
+                        "Sprint 5 (3.0.1 and 3.0.2)", "Mobile 3.0.2"
+                    },
+                    {
+                        "Sprint 6 (3.0.3)", "Mobile 3.0.3"
+                    },
+                    {
+                        "Sprint 7 (3.1)", "Mobile 3.1"
+                    },
+                    {
+                        "Sprint 8 (3.0.4)", "Mobile 3.0.4"
+                    },
+                    {
+                        "Sprint 9 (3.2)", "Mobile 3.2"
+                    },
+                    {
+                        "Sprint 10 (3.1.1)", "Mobile 3.1.1"
+                    },
+                    {
+                        "Sprint 11 (3.2)", "Mobile 3.2"
+                    },
+                    {
+                        "Sprint 12 (3.2)", "Mobile 3.2"
+                    },
+                    {
+                        "Sprint 13 (3.2)", "Mobile 3.2"
+                    },
+                    {
+                        "Sprint 14 (3.3)", "Mobile 3.3"
+                    },
+                    {
+                        "3.2.1", "Mobile 3.2.1"
+                    },
+                    {
+                        "Sprint 15 (3.3)", "Mobile 3.3"
+                    },
+                    {
+                        "Sprint 16 (3.3)", "Mobile 3.3"
+                    },
+                    {
+                        "Sprint 17 (3.3)", "Mobile 3.3"
+                    },
+                    {
+                        "Sprint 18 (3.3)", "Mobile 3.3"
+                    },
+                    {
+                        "Sprint 19 (3.3)", "Mobile 3.3"
+                    },
+                    {
+                        "default", "Backlog"
+                    }
+                };
+            }
+        }
+
         public static Dictionary<string, Action<YouTrack.Field, Jira.IssueRequest>> Properties 
         {
             get
@@ -125,7 +196,7 @@ namespace Importer.Mappings
                     {
                         "description", delegate(YouTrack.Field field, Jira.IssueRequest request)
                         {
-                            request.Fields.Description = field.Value;
+                            request.Fields.Description = string.IsNullOrWhiteSpace(field.Value) ? "None" : field.Value;
                         }
                     },
                     {
@@ -137,27 +208,49 @@ namespace Importer.Mappings
                     {
                         "Type", delegate(YouTrack.Field field, Jira.IssueRequest request)
                         {
-                            request.Fields.JiraIssueType = Mappings.YouTrackToJira.IssueType[field.Value];
+                            request.Fields.JiraIssueType = IssueType[field.Value];
                         }
                     },
                     {
                         "Priority", delegate(YouTrack.Field field, Jira.IssueRequest request)
                         {
-                            request.Fields.Priority = new Jira.Fields.Priority{ Name = Mappings.YouTrackToJira.Priority[field.Value] };
+                            request.Fields.Priority = new Priority{ Name = Priority[field.Value] };
                         }
                     },
                     {
                         "Assignee", delegate(YouTrack.Field field, Jira.IssueRequest request)
                         {
-                            string value = "";
+                            string value;
                             const string defaultUser = "default";
                             if (Users.TryGetValue(field.Value ?? defaultUser, out value))
                             {
-                                request.Fields.Assignee = new Jira.Fields.User { Name = value };
+                                request.Fields.Assignee = new User { Name = value };
                             }
                             else
                             {
-                                request.Fields.Assignee = new Jira.Fields.User { Name = Users[defaultUser] };
+                                request.Fields.Assignee = new User { Name = Users[defaultUser] };
+                            }
+                        }
+                    },
+                    {
+                        "Fix versions", delegate(YouTrack.Field field, Jira.IssueRequest request)
+                        {
+                            string value;
+                            const string defaultVersion = "default";
+                            
+                            if (Versions.TryGetValue(field.Value ?? defaultVersion, out value))
+                            {
+                                request.Fields.FixVersions.Add(new VersionPicker
+                                {
+                                    Name = value
+                                });
+                            }
+                            else
+                            {
+                                request.Fields.FixVersions.Add(new VersionPicker
+                                {
+                                    Name = Versions[defaultVersion]
+                                });
                             }
                         }
                     }
