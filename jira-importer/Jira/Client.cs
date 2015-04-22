@@ -29,7 +29,7 @@ namespace Importer.Jira
                         Task<HttpStatusCode> status = Jira.Client.CreateJiraComment(issueResults.Id, comment);
                         var statusResult = status.Result; // Block to preserve comment order
 
-                        if (statusResult == HttpStatusCode.OK)
+                        if (statusResult == HttpStatusCode.Created)
                         {
                             Console.WriteLine(string.Format("Comment for {0} created.", issueResults.Id));
                         }
