@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Importer.Jira
+namespace Jira
 {
     public class Client
     {
@@ -27,7 +27,7 @@ namespace Importer.Jira
                     Console.WriteLine(string.Format("New issue created with ID: {0}", issueResults.Id));
                     foreach (var comment in comments)
                     {
-                        Task<HttpStatusCode> status = Jira.Client.CreateJiraComment(issueResults.Id, comment);
+                        Task<HttpStatusCode> status = Client.CreateJiraComment(issueResults.Id, comment);
                         var statusResult = status.Result; // Block to preserve comment order
 
                         if (statusResult == HttpStatusCode.Created)

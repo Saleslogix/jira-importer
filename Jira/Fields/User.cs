@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace Importer.Jira.Fields
+namespace Jira.Fields
 {
-    public class Priority
+    public class User
     {
         [JsonProperty("name")]
         public string Name { get; set; }

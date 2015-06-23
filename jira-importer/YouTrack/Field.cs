@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace Importer.YouTrack
+namespace YouTrackToJira.YouTrack
 {
     public class Field
     {

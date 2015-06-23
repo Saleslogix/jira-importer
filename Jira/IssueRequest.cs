@@ -1,8 +1,8 @@
-﻿using Importer.Jira.Fields;
+﻿using Jira.Fields;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 
-namespace Importer.Jira
+namespace Jira
 {
     public class IssueRequest
     {

@@ -3,7 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jira-importer", "jira-importer\jira-importer.csproj", "{F4B23EAA-DE5F-4EDB-A87E-D539352B19FB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YouTrackToJira", "jira-importer\YouTrackToJira.csproj", "{F4B23EAA-DE5F-4EDB-A87E-D539352B19FB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3E905BC0-6064-4972-869F-82699C60036F} = {3E905BC0-6064-4972-869F-82699C60036F}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jira", "Jira\Jira.csproj", "{3E905BC0-6064-4972-869F-82699C60036F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +20,10 @@ Global
 		{F4B23EAA-DE5F-4EDB-A87E-D539352B19FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4B23EAA-DE5F-4EDB-A87E-D539352B19FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4B23EAA-DE5F-4EDB-A87E-D539352B19FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E905BC0-6064-4972-869F-82699C60036F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E905BC0-6064-4972-869F-82699C60036F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E905BC0-6064-4972-869F-82699C60036F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E905BC0-6064-4972-869F-82699C60036F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

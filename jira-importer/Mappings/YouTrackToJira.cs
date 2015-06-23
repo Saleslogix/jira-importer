@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Importer.Jira.Fields;
+using Jira.Fields;
 
-namespace Importer.Mappings
+namespace YouTrackToJira.Mappings
 {
     /// <summary>
     /// Mappings for YouTrack to Jira datasets. The LHS (key) will be YouTrack, the RHS (value) will be Jira.

@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace Importer.Jira.Fields
+namespace Jira.Fields
 {
-    public class Components
+    public class MultiSelect
     {
-        [JsonProperty("name")]
-        public string Name { get; set; }
+        [JsonProperty("value")]
+        public string Value { get; set; }
     }
 }

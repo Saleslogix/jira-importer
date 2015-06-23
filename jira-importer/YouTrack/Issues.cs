@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace Importer.YouTrack
+namespace YouTrackToJira.YouTrack
 {
     [XmlRoot("issues")]
     [Serializable]

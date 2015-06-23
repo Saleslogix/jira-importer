@@ -1,5 +1,4 @@
-﻿using Importer.Jira.Fields;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -10,7 +9,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using Formatting = Newtonsoft.Json.Formatting;
 
-namespace Importer
+namespace YouTrackToJira
 {
     class Program
     {
@@ -71,8 +70,8 @@ namespace Importer
 
                     };
 
-                    jiraIssue.Fields.Versions.Add(new VersionPicker { Name = "Mobile 3.3" }); // TODO: Don't hardcode
-                    jiraIssue.Fields.Components.Add(new Components { Name = "Mobile" }); // TODO: Don't hardcode
+                    jiraIssue.Fields.Versions.Add(new Jira.Fields.VersionPicker { Name = "Mobile 3.3" }); // TODO: Don't hardcode
+                    jiraIssue.Fields.Components.Add(new Jira.Fields.Components { Name = "Mobile" }); // TODO: Don't hardcode
 
                     foreach (var youtrackIssueField in youtrackIssue.Fields)
                     {
